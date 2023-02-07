@@ -43,3 +43,19 @@ func TestContextWithValue(t *testing.T) {
 	fmt.Println(contextA.Value("b"))
 
 }
+
+// Context with Cancel
+
+func CreateCounter() chan int {
+	destination := make(chan int)
+
+	go func() {
+		defer close(destination)
+		counter := 1
+		for {
+			destination <- counter
+			counter++
+		}
+	}()
+	return destination
+}
