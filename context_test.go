@@ -3,7 +3,9 @@ package gocontext
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"testing"
+	"time"
 )
 
 // Context Background
@@ -44,18 +46,42 @@ func TestContextWithValue(t *testing.T) {
 
 }
 
-// Context with Cancel
-
-func CreateCounter() chan int {
+func CreateCounter(ctx context.Context) chan int {
 	destination := make(chan int)
 
 	go func() {
 		defer close(destination)
 		counter := 1
 		for {
-			destination <- counter
-			counter++
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				destination <- counter
+				counter++
+			}
 		}
 	}()
 	return destination
+}
+
+// Context with Cancel
+
+func TestContextWithCancel(t *testing.T) {
+	fmt.Println("Goroutine Total: ", runtime.NumGoroutine())
+
+	parent := context.Background()
+	ctx, cancel := context.WithCancel(parent)
+
+	destination := CreateCounter(ctx)
+
+	for n := range destination {
+		fmt.Println("Counter", n)
+		if n == 10 {
+			break
+		}
+	}
+	cancel() // mengirim signal cancel to context
+	time.Sleep(2 * time.Second)
+	fmt.Println("Goroutine total: ", runtime.NumGoroutine())
 }
