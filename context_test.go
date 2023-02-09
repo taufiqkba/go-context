@@ -72,8 +72,29 @@ func TestContextWithTimeout(t *testing.T) {
 	fmt.Println("Goroutine Total: ", runtime.NumGoroutine())
 
 	parent := context.Background()
-	// ctx, cancel := context.WithCancel(parent)
-	ctx, cancel := context.WithTimeout(parent, 5*time.Second)
+	// ctx, cancel := context.WithCancel(parent) //Context with cancel
+	ctx, cancel := context.WithTimeout(parent, 5*time.Second) // Context with timeout
+	defer cancel()
+
+	destination := CreateCounter(ctx)
+
+	for n := range destination {
+		fmt.Println("Counter", n)
+	}
+
+	time.Sleep(2 * time.Second)
+	fmt.Println("Goroutine total: ", runtime.NumGoroutine())
+}
+
+// Context with Deadline
+
+func TestContextWithDeadline(t *testing.T) {
+	fmt.Println("Goroutine Total: ", runtime.NumGoroutine())
+
+	parent := context.Background()
+	// ctx, cancel := context.WithCancel(parent) //Context with cancel
+	// ctx, cancel := context.WithTimeout(parent, 5*time.Second) // Context with timeout
+	ctx, cancel := context.WithDeadline(parent, time.Now().Add(5*time.Second)) // Context with Deadline
 	defer cancel()
 
 	destination := CreateCounter(ctx)
